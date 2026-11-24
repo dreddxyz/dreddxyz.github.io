@@ -9,6 +9,7 @@
   <title>Spread Desk · P2P market demo</title>
   <link rel="stylesheet" href="style.css">
   <script defer src="examples.js"></script>
+  <script defer src="i18n.js"></script>
   <script defer src="view.js"></script>
   <script defer src="replay.js"></script>
 </head>
@@ -20,6 +21,7 @@
       <button id="log-tab" type="button" role="tab" aria-selected="false" aria-controls="log-pane" tabindex="-1">Alert history <span id="log-count" class="count"></span></button>
     </nav>
     <span class="demo-label">Demo prices</span>
+    <a id="language-switch" href="?lang=ru" lang="ru" hreflang="ru">Русский</a>
   </div></header>
   <main class="wrap">
     <div id="book-pane" role="tabpanel" aria-labelledby="book-tab">
@@ -50,12 +52,12 @@
           </div>
           <div class="demo-filters">
             <label class="field">Amount<span class="select-wrap"><select id="amount"><option value="50">50 USDT</option><option value="100" selected>100 USDT</option><option value="200">200 USDT</option><option value="1000">1,000 USDT</option></select><i class="chevron" aria-hidden="true"></i></span></label>
-            <label class="field">Payment<span class="select-wrap"><select id="payment"><option value="">All payments</option><option>SBP</option><option>Bank transfer</option></select><i class="chevron" aria-hidden="true"></i></span></label>
+            <label class="field">Payment<span class="select-wrap"><select id="payment"><option value="">All payments</option><option value="SBP">SBP</option><option value="Bank transfer">Bank transfer</option></select><i class="chevron" aria-hidden="true"></i></span></label>
           </div>
         </div>
         <table id="order-table" aria-label="Offers to buy USDT"><thead><tr><th scope="col">Merchant</th><th scope="col">Price</th><th scope="col">Available / limits</th><th scope="col">Payment method</th><th scope="col">For this trade</th></tr></thead><tbody id="offers"></tbody></table>
         <p id="book-empty" class="empty" hidden></p>
-        <div class="book-bottom"><span id="book-count"></span><a href="https://paycat.com/en/p2p" target="_blank" rel="noopener noreferrer">Open Paycat</a></div>
+        <div class="book-bottom"><span id="book-count"></span><a data-paycat-market href="https://paycat.com/en/p2p" target="_blank" rel="noopener noreferrer">Open Paycat</a></div>
       </section>
     </div>
     <section id="log-pane" role="tabpanel" aria-labelledby="log-tab" hidden>
@@ -67,11 +69,11 @@
   <dialog id="fee-dialog" aria-labelledby="fee-title">
     <div class="dialog-head"><h2 id="fee-title">Alert settings</h2><button type="button" class="close" id="fees-close" aria-label="Close">×</button></div>
     <form id="fee-form">
-      <label>Alert when net spread reaches (%)<input name="target" type="number" inputmode="decimal" step="0.01" min="0" max="100" value="4" required></label>
+      <label>Alert when net spread reaches (%)<input name="target" type="text" inputmode="decimal" value="4" required></label>
       <label>Sample fees<select name="fees"><option value="standard">0.20% on each side</option><option value="transfer">0.20% on each side + ₽10</option><option value="zero">No fees</option></select></label>
       <button class="primary" type="submit">Save settings</button>
     </form>
   </dialog>
-  <noscript>Enable JavaScript to play the sample market.</noscript>
+  <noscript>Enable JavaScript to play the sample market. <span lang="ru">Для работы страницы включите JavaScript.</span></noscript>
 </body>
 </html>

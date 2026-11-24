@@ -1,16 +1,35 @@
 (() => {
   "use strict";
+  const {t, isRussian, locale, paymentName, offerCount, bindPage} = window.SpreadI18n;
+  bindPage();
   const $ = id => document.getElementById(id);
   const setText = (id, value) => { $(id).textContent = value; };
-  const clock = t => new Date(t).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false});
-  const percent = n => (n > 0 ? "+" : "") + n.toFixed(2) + "%";
+  const clock = time => new Date(time).toLocaleTimeString(locale(), {hour:"2-digit", minute:"2-digit", second:"2-digit", hourCycle:"h23"});
+  function rate(n, min = 2, max = min) {
+    return n.toLocaleString(locale(), {minimumFractionDigits:min, maximumFractionDigits:max, useGrouping:false}) + (isRussian() ? " %" : "%");
+  }
+  const percent = n => (n > 0 ? "+" : "") + rate(n);
+  function netLabel(net, target, aboveTarget) {
+    if (!aboveTarget && net > 0 && Number(net.toFixed(2)) === target) return "<" + rate(target);
+    return percent(net);
+  }
   function units(value, digits, minimum = 0) {
     const sign = value < 0n ? "−" : "";
     const n = value < 0n ? -value : value, base = 10n ** BigInt(digits);
     const fraction = (n % base).toString().padStart(digits, "0").replace(/0+$/, "").padEnd(minimum, "0");
-    return sign + (n / base).toLocaleString("en-US") + (fraction ? "." + fraction : "");
+    return sign + (n / base).toLocaleString(locale(), {useGrouping:true}) + (fraction ? (isRussian() ? "," : ".") + fraction : "");
   }
-  const rub = n => units(n, 2, 2) + " ₽";
+  const rub = n => units(n, 2, 2) + " ₽";
+  function limits(min, max) {
+    return isRussian() ? units(min, 2) + " – " + units(max, 2) + " ₽" : "₽" + units(min, 2) + " – ₽" + units(max, 2);
+  }
+  function eventDetail(e) {
+    return t("{size} USDT · {method} · Buy from {buyMerchant} at {buy} · Sell to {sellMerchant} at {sell}", {
+      size:units(e.size, 6), method:paymentName(e.method),
+      buyMerchant:e.buy.merchant + " (#" + e.buy.id + ")", buy:units(e.buy.price, 6, 2) + " ₽",
+      sellMerchant:e.sell.merchant + " (#" + e.sell.id + ")", sell:units(e.sell.price, 6, 2) + " ₽",
+    });
+  }
 
   function drawChart(history, target) {
     const canvas = $("chart"), rect = canvas.getBoundingClientRect();
@@ -29,7 +48,7 @@
     ctx.font = "12px Segoe UI, Arial, sans-serif"; ctx.textBaseline = "middle";
     [top, (top + bottom) / 2, bottom].forEach(v => {
       ctx.strokeStyle = "#333338"; ctx.lineWidth = .7; ctx.beginPath(); ctx.moveTo(x0, y(v)); ctx.lineTo(right, y(v)); ctx.stroke();
-      ctx.fillStyle = "#b5b5bf"; ctx.fillText(v.toFixed(Math.abs(v) < 100 ? 1 : 0) + "%", right + 7, y(v));
+      ctx.fillStyle = "#b5b5bf"; ctx.fillText(rate(v, Math.abs(v) < 100 ? 1 : 0), right + 7, y(v));
     });
     ctx.setLineDash([4, 4]); ctx.strokeStyle = "#d8b377"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(x0, y(target)); ctx.lineTo(right, y(target)); ctx.stroke(); ctx.setLineDash([]);
@@ -42,9 +61,9 @@
     }
     for (const p of history) { if (p.v === null) paintSegment(); else segment.push(p); }
     paintSegment();
-    if (!points.length) { ctx.font = "13px Segoe UI, sans-serif"; ctx.fillStyle = "#b5b5bf"; ctx.fillText("Waiting for a matched pair", 8, y0 + 13); }
+    if (!points.length) { ctx.font = "13px Segoe UI, sans-serif"; ctx.fillStyle = "#b5b5bf"; ctx.fillText(t("Waiting for a matched pair"), 8, y0 + 13); }
     setText("first-time", history.length ? clock(first) : "—"); setText("last-time", history.length ? clock(last) : "—");
-    canvas.setAttribute("aria-label", "Best net spread history. " + points.length + " observations. Threshold " + target + " percent.");
+    canvas.setAttribute("aria-label", t("Net spread over {count} observations with a threshold of {target}.", {count:points.length, target:rate(target, 0, 2)}));
   }
 
   function element(tag, label, className = "") {
@@ -76,22 +95,23 @@
       payment.append(element("span", o.payment, "payment"));
       const status = tr.insertCell();
       status.className = "status" + (o.matched ? " matched" : "");
-      status.textContent = o.reason || (o.matched ? "Matched" : "Eligible");
+      status.textContent = t(o.reason || (o.matched ? "Matched" : "Eligible"));
       fragment.append(tr);
     }
     $("offers").replaceChildren(fragment);
-    $("order-table").setAttribute("aria-label", "Offers to " + bookSide + " USDT");
+    $("order-table").setAttribute("aria-label", t(bookSide === "buy" ? "Offers to buy USDT" : "Offers to sell USDT"));
     $("book-empty").hidden = Boolean(rows.length);
-    setText("book-empty", "No offers to " + bookSide + " USDT" + (method ? " using " + method : "") + " in this snapshot.");
-    setText("book-count", rows.length + (rows.length === 1 ? " offer" : " offers"));
+    const empty = bookSide === "buy" ? "No offers to buy USDT{method} in this snapshot." : "No offers to sell USDT{method} in this snapshot.";
+    setText("book-empty", t(empty, {method:method ? t(" using {method}", {method:paymentName(method)}) : ""}));
+    setText("book-count", offerCount(rows.length));
     for (const side of ["buy", "sell"]) $("side-" + side).setAttribute("aria-pressed", String(side === bookSide));
   }
 
   function showEvents(events) {
     const items = events.map(e => {
       const li = document.createElement("li"), time = document.createElement("time"), desc = document.createElement("div"), sub = document.createElement("small"), net = document.createElement("strong");
-      time.textContent = clock(e.time); desc.textContent = e.sample ? "Sample threshold crossing" : "Quote threshold crossed";
-      sub.textContent = e.detail; desc.append(sub); net.textContent = e.net + " · " + e.profit; li.append(time, desc, net); return li;
+      time.textContent = clock(e.time); desc.textContent = t(e.sample ? "Sample threshold crossing" : "Quote threshold crossed");
+      sub.textContent = eventDetail(e); desc.append(sub); net.textContent = percent(e.net) + " · " + rub(e.profit); li.append(time, desc, net); return li;
     });
     $("log").replaceChildren(...items); $("log-empty").hidden = Boolean(events.length); setText("log-count", events.length);
   }
@@ -111,5 +131,5 @@
     };
   }
 
-  window.SpreadView = { $, setText, clock, percent, units, rub, showBook, showEvents, drawChart };
+  window.SpreadView = { $, setText, clock, percent, rate, netLabel, units, rub, limits, eventDetail, showBook, showEvents, drawChart };
 })();
