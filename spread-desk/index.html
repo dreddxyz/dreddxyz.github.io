@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#080809">
+  <meta name="description" content="Try a Paycat USDT/RUB spread monitor with fictional P2P offers.">
+  <title>Spread Desk · P2P market demo</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="examples.js"></script>
+  <script defer src="view.js"></script>
+  <script defer src="replay.js"></script>
+</head>
+<body>
+  <header class="mast"><div class="mast-inner wrap">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">⇄</span>Spread Desk</div>
+    <nav role="tablist" aria-label="Market views">
+      <button id="book-tab" type="button" role="tab" aria-selected="true" aria-controls="book-pane">Market</button>
+      <button id="log-tab" type="button" role="tab" aria-selected="false" aria-controls="log-pane" tabindex="-1">Alert history <span id="log-count" class="count"></span></button>
+    </nav>
+    <span class="demo-label">Demo prices</span>
+  </div></header>
+  <main class="wrap">
+    <div id="book-pane" role="tabpanel" aria-labelledby="book-tab">
+      <div class="market-heading">
+        <div><p class="venue">Paycat P2P</p><h1>USDT <span>/</span> RUB</h1></div>
+        <button id="fees-open" type="button" class="subtle-button" aria-haspopup="dialog">Alert settings</button>
+      </div>
+      <section class="quotes" aria-label="Best matched prices for the sample trade">
+        <div class="quote"><h2>Buy price</h2><p class="price"><span id="buy-price">—</span><small> ₽</small></p><p id="buy-merchant" class="muted">—</p></div>
+        <div class="quote"><h2>Sell price</h2><p class="price"><span id="sell-price">—</span><small> ₽</small></p><p id="sell-merchant" class="muted">—</p></div>
+        <div class="quote return"><h2>Estimated profit</h2><p class="price" id="profit">—</p><p class="return-line"><strong id="net">—</strong><span id="decision">Waiting</span></p></div>
+      </section>
+      <p id="availability-note" class="availability" role="status" hidden></p>
+      <details id="quote-details" class="details">
+        <summary><span>Price breakdown <i aria-hidden="true" class="chevron"></i></span><small id="route-method"></small></summary>
+        <div class="detail-body">
+          <div><dl class="breakdown"><div><dt>Gross spread</dt><dd id="gross">—</dd></div><div><dt>Estimated fees</dt><dd id="costs">—</dd></div></dl>
+            <p id="route-caption"></p><p id="resale"></p></div>
+          <div class="chart"><div class="chart-title"><h2>Net spread history</h2><span id="target-legend"></span></div>
+            <div class="chart-wrap"><canvas id="chart" aria-label="Net spread history"></canvas></div>
+            <div class="chart-foot"><span id="first-time">—</span><span id="last-time">—</span></div></div>
+        </div>
+      </details>
+      <section class="market-book" aria-label="Sample P2P offers">
+        <div class="toolbar">
+          <div role="group" aria-label="Show offers to" class="side-switch">
+            <button id="side-buy" type="button" aria-pressed="true">Buy USDT</button><button id="side-sell" type="button" aria-pressed="false">Sell USDT</button>
+          </div>
+          <div class="demo-filters">
+            <label class="field">Amount<span class="select-wrap"><select id="amount"><option value="50">50 USDT</option><option value="100" selected>100 USDT</option><option value="200">200 USDT</option><option value="1000">1,000 USDT</option></select><i class="chevron" aria-hidden="true"></i></span></label>
+            <label class="field">Payment<span class="select-wrap"><select id="payment"><option value="">All payments</option><option>SBP</option><option>Bank transfer</option></select><i class="chevron" aria-hidden="true"></i></span></label>
+          </div>
+        </div>
+        <table id="order-table" aria-label="Offers to buy USDT"><thead><tr><th scope="col">Merchant</th><th scope="col">Price</th><th scope="col">Available / limits</th><th scope="col">Payment method</th><th scope="col">For this trade</th></tr></thead><tbody id="offers"></tbody></table>
+        <p id="book-empty" class="empty" hidden></p>
+        <div class="book-bottom"><span id="book-count"></span><a href="https://paycat.com/en/p2p" target="_blank" rel="noopener noreferrer">Open Paycat</a></div>
+      </section>
+    </div>
+    <section id="log-pane" role="tabpanel" aria-labelledby="log-tab" hidden>
+      <div class="market-heading"><div><p class="venue">Paycat P2P</p><h1>Alert history</h1></div></div>
+      <ul id="log" class="event-list"></ul><p id="log-empty" class="empty">No sample offers crossed your alert threshold.</p>
+    </section>
+    <footer><span id="foot-source">Fictional offers</span><button id="play" type="button" class="text-button">Pause replay</button></footer>
+  </main>
+  <dialog id="fee-dialog" aria-labelledby="fee-title">
+    <div class="dialog-head"><h2 id="fee-title">Alert settings</h2><button type="button" class="close" id="fees-close" aria-label="Close">×</button></div>
+    <form id="fee-form">
+      <label>Alert when net spread reaches (%)<input name="target" type="number" inputmode="decimal" step="0.01" min="0" max="100" value="4" required></label>
+      <label>Sample fees<select name="fees"><option value="standard">0.20% on each side</option><option value="transfer">0.20% on each side + ₽10</option><option value="zero">No fees</option></select></label>
+      <button class="primary" type="submit">Save settings</button>
+    </form>
+  </dialog>
+  <noscript>Enable JavaScript to play the sample market.</noscript>
+</body>
+</html>
